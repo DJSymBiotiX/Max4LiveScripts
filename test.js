@@ -1,32 +1,45 @@
 /* Define a nice logging function that
  * should log whatever we give it
  */
-function log () {
-	for (var i = 0; i < arguments.length; i++) {
-		var message = arguments[i];
+let log = function () {
+    for (let i in arguments) {
+        msg = arguments[i];
+        if (msg && msg.toString) {
+            let s = message.toString();
+            if (s.indexOf("[object ") >= 0) {
+                s = JSON.stringify(msg);
+            }
+            post(s);
+        } else if (msg === null) {
+            post("<null>");
+        } else {
+            post(msg);
+        }
+    }
+    post("\n");
+};
 
-		if (message && message.toString) {
-			var s = message.toString();
-
-			if (s.indexOf("[object ") >= 0) {
-				s = JSON.stringify(message);
-			}
-			post (s);
-		} else if (message === null) {
-			post ("<null>");
-		} else {
-			post (message);
-		}
-	}
-	post ("\n");
-}
+// Quickhand to see if an object exists in an array
+let contains = function (a, obj) {
+    return a.indexOf(obj) != -1;
+};
 
 // Show where we reloaded the script in the log file
 log("__________________________________________________________");
 log("Reload: ", new Date);
 
 
-// Set the amount of inlets and outlets that we want
+/* Play a Chord
+ * Take in a note and a set of offsets as an array
+ */
+let play_chord = function (note, offsets) {
+	for (let i in offsets) {
+        offset = offsets[i];
+        outlet(i, note + offset);
+    }
+};
+
+
 /*
  * Inlets:
  *  0: Note In
@@ -44,81 +57,66 @@ outlets = 5;
 
 // Set our objects/arrays for the settings
 
-var keys = ["C", "D", "E", "F", "G", "A", "B"];
-var key_signature = 0;
+let all_keys = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+let key_signature = "C";
 
-var majmin = ["Major", "Minor"];
-var mode = 0;
+let majmin = ["Major", "Minor"];
+let mode = "Major";
 
-var chords = [
-	[
-		["Triad", "Seventh", "Add2", "Add4", "Add6", "Add9", "Sus2", "Sus4", "Maj7sys2", "Maj7sus4"]
-	]
-];
-var c_key = 0;
+// Chords -> Key Signature -> Key Played -> Mode -> Chord
+let chords = {
+    C: {
+        C: {
+            Major: [
+                [0, 4, 7],
+                [0, 4, 7, 11]
+            ],
+            Minor: [
 
-var note_values = [
-	[0, 12, 24, 36, 48, 60, 72, 84, 96, 108, 120]
-];
-
-function contains (a, obj) {
-	for (var i = 0; i < a.length; i++) {
-		if (a[i] === obj) {
-			return true;
-		}
-	}
-	return false;
+            ]
+        }
+    }
 };
 
-function three_chord(note, a, b, c) {
-	outlet(0, note + a);
-	outlet(1, note + b);
-	outlet(2, note + c);
+//["Triad", "Seventh", "Add2", "Add4", "Add6", "Add9", "Sus2", "Sus4", "Maj7sys2", "Maj7sus4"]
+let c_key = 0;
+
+
+// Determine the key that was played
+let get_key_played = function (note) {
+    let notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+
+    for (let i in notes) {
+        if (note == i || note % 12 == i) {
+            return notes[i];
+        }
+    }
+    return -1;
 };
 
-function four_chord(note, a, b, c, d) {
-	outlet(0, note + a);
-	outlet(1, note + b);
-	outlet(2, note + c);
-	outlet(3, note + d);
+let play_note = function (note) {
+    let key_played = get_key_played(note);
+    play_chord(note, chords[key_signature][key_played][mode][c_key]);
 };
 
-function play_note (note) {
-	// Detect Note
-	// C
-	log (note);
-	log (note_values[0]);
-	if (contains(note_values[0], note)) {
-		switch(c_key) {
-			case 0: //Triad
-				three_chord(note, 0, 4, 7);
-				break;
-			case 1: //Seventh
-				four_chord(note, 0, 4, 7, 11);
-				break;
-		}
-	}
+let msg_float = function (f) {
+	log("Message Float: ", f);
 }
 
-function msg_float(f) {
-	msg_int(f);
-}
-
-function msg_int(i) {
-	log(inlet, ': ', i);
+let msg_int = function (i) {
+	log("Message Int: [", inlet, " : ", i, "]");
 
 	switch (inlet) {
-		case 0:
-			log ("Play Note");
+		case 0: // Note In
 			play_note(i);
 			break;
 		case 1: // Key Signature
-			key_signature = i;
-			log ("Key Signature: ", keys[key_signature]);
+			key_signature = all_keys[i];
+			log ("Key Signature: ", key_signature);
 			break;
 		case 2: // Mode [Major, Minor]
-			mode = i;
-			log ("Mode: ", majmin[mode]);
+			mode = majmin[i];
+			log ("Mode: ", mode);
 			break;
 		case 3: // C Key
 			c_key = i;
