@@ -1,11 +1,11 @@
 /* Define a nice logging function that
  * should log whatever we give it
  */
-let log = function () {
-    for (let i in arguments) {
+var log = function () {
+    for (var i in arguments) {
         msg = arguments[i];
         if (msg && msg.toString) {
-            let s = message.toString();
+            var s = message.toString();
             if (s.indexOf("[object ") >= 0) {
                 s = JSON.stringify(msg);
             }
@@ -20,7 +20,7 @@ let log = function () {
 };
 
 // Quickhand to see if an object exists in an array
-let contains = function (a, obj) {
+var contains = function (a, obj) {
     return a.indexOf(obj) != -1;
 };
 
@@ -32,8 +32,8 @@ log("Reload: ", new Date);
 /* Play a Chord
  * Take in a note and a set of offsets as an array
  */
-let play_chord = function (note, offsets) {
-	for (let i in offsets) {
+var play_chord = function (note, offsets) {
+	for (var i in offsets) {
         offset = offsets[i];
         outlet(i, note + offset);
     }
@@ -57,14 +57,14 @@ outlets = 5;
 
 // Set our objects/arrays for the settings
 
-let all_keys = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-let key_signature = "C";
+var all_keys = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+var key_signature = "C";
 
-let majmin = ["Major", "Minor"];
-let mode = "Major";
+var majmin = ["Major", "Minor"];
+var mode = "Major";
 
 // Chords -> Key Signature -> Key Played -> Mode -> Chord
-let chords = {
+var chords = {
     C: {
         C: {
             Major: [
@@ -79,14 +79,14 @@ let chords = {
 };
 
 //["Triad", "Seventh", "Add2", "Add4", "Add6", "Add9", "Sus2", "Sus4", "Maj7sys2", "Maj7sus4"]
-let c_key = 0;
+var c_key = 0;
 
 
 // Determine the key that was played
-let get_key_played = function (note) {
-    let notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+var get_key_played = function (note) {
+    var notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
-    for (let i in notes) {
+    for (var i in notes) {
         if (note == i || note % 12 == i) {
             return notes[i];
         }
@@ -94,16 +94,16 @@ let get_key_played = function (note) {
     return -1;
 };
 
-let play_note = function (note) {
-    let key_played = get_key_played(note);
+var play_note = function (note) {
+    var key_played = get_key_played(note);
     play_chord(note, chords[key_signature][key_played][mode][c_key]);
 };
 
-let msg_float = function (f) {
+var msg_float = function (f) {
 	log("Message Float: ", f);
 }
 
-let msg_int = function (i) {
+var msg_int = function (i) {
 	log("Message Int: [", inlet, " : ", i, "]");
 
 	switch (inlet) {
