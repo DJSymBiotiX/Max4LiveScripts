@@ -90,9 +90,14 @@ var determine_chord = function (pitch, velocity) {
     var key_played = get_key_played(pitch);
 
     // Don't play anything if the key isnt in the key selectors
-    if (contains(key_selectors, key_played)) {
-        play_chord(pitch, velocity, chords[key_played][key_selector[key_played]]);
+    if (key_played in key_selectors) {
+        play_chord(pitch, velocity, chords[key_played][key_selectors[key_played]]);
     }
+};
+
+var key_out = function (pitch, velocity) {
+	log("Key Out: [", pitch, " : ", velocity, "]");
+	outlet(0, [pitch, velocity]);
 };
 
 // Take in a note, velocity, and offsets and play the chord
@@ -109,27 +114,33 @@ var play_chord = function (pitch, velocity, offsets) {
         // If this is a note on message (velocity != 0)
         if (velocity != 0) {
             // If the note is already on...
-            if (contains(key_on, key)) {
+            if (key in keys_on) {
                 // Send a note off trigger for that note
-                outlet(0, [pitch + offset, 0]);
-                delete key_on[key];
+				key_out(pitch + offset, 0);
+                //keys_on[key] += 1;
             }
             // Send a note on trigger for that note
-            outlet(0, [pitch + offset, velocity]);
-            key_on[key] = true;
+			key_out(pitch + offset, velocity);
+           	if (!(key in keys_on)) {
+				keys_on[key] = 1;
+			} else {
+				keys_on[key] += 1;
+			}
         } else {
             // velocity == 0
-            if (contains(key_on, key)) {
-                // If the key is still "on" delete it from the key_on
+            if (key in keys_on) {
+                // If the key is still "on" delete it from the keys_on
                 // dict. This sets it to actually be turned off
                 // on a subsequent note off message
-                delete key_on[key];
-            } else {
-                // Key doesn't exist in the key_on dict,
-                // lets send a proper note off for it
-                outlet(0, [pitch + offset, 0]);
+                keys_on[key] -= 1;
             }
         }
+
+		//log(keys_on);
+		if (key in keys_on && keys_on[key] == 0) {
+			key_out(pitch + offset, 0);
+			delete keys_on[key];
+		}
     }
 };
 
@@ -144,7 +155,7 @@ var get_key_played = function (pitch) {
 };
 
 var get_octave_played = function (pitch) {
-    return pitch / 12;
+    return parseInt(pitch / 12, 10);
 };
 
 // Accept a note in trigger.
