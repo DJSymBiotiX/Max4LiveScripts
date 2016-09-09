@@ -106,17 +106,29 @@ var play_chord = function (pitch, velocity, offsets) {
         var octave = get_octave_played(pitch + offset);
         var key = key_value + "" + octave;
 
-        // If the key we want to play is getting a "note off" message
-        // or the key we want to play is currently already "on"
-        // turn it off
-        if (velocity == 0 || contains(key_on, key)) {
-            // Send a note off trigger specifically
-            outlet(0, [pitch + offset, 0]);
-            delete key_on[key];
-        } else {
-            // Send a note on trigger
+        // If this is a note on message (velocity != 0)
+        if (velocity != 0) {
+            // If the note is already on...
+            if (contains(key_on, key)) {
+                // Send a note off trigger for that note
+                outlet(0, [pitch + offset, 0]);
+                delete key_on[key];
+            }
+            // Send a note on trigger for that note
             outlet(0, [pitch + offset, velocity]);
             key_on[key] = true;
+        } else {
+            // velocity == 0
+            if (contains(key_on, key)) {
+                // If the key is still "on" delete it from the key_on
+                // dict. This sets it to actually be turned off
+                // on a subsequent note off message
+                delete key_on[key];
+            } else {
+                // Key doesn't exist in the key_on dict,
+                // lets send a proper note off for it
+                outlet(0, [pitch + offset, 0]);
+            }
         }
     }
 };
