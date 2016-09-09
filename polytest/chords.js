@@ -34,45 +34,120 @@ log("Reload: ", new Date);
 inlets = 2;
 
 // Output
-// list voice, pitch, velocity
+// list pitch, velocity
 outlets = 1;
 
+// Variables
+var key_selectors = {
+    C: 0, // Triad Seventh Add2 Add4 Add6 Add9 Sus2 Sus4 Maj7sus2 Maj7sus4
+    D: 0, // Triad Seventh Add2 Add4 Add6 Add9 9 Sus2 Sus4 7sus2 7sus4
+    E: 0, // Triad Seventh Add4 Sus4 7sus4
+    F: 0, // Triad Seventh Add2 Add6 Add9 Sus2 Maj7sus2
+    G: 0, // Triad Seventh Add2 Add4 Add6 Add9 9 Sus2 Sus4 7Sus2 7Sus4
+    A: 0, // Triad Seventh Add2 Add4 Add9 9 Sus2 Sus4 7sus2 7sus4
+    B: 0  // Triad Seventh
+};
+
+// Chords -> Key Played -> Chord
+var chords = {
+    C: [
+        [0, 4, 7],      // Triad
+        [0, 4, 7, 11],  // Seventh
+        [0, 2, 4, 7],   // Add2
+        [0, 4, 5, 7],   // Add4
+        [0, 4, 7, 9],   // Add6
+        [0, 4, 7, 14],  // Add9
+        [0, 2, 7],      // Sus2
+        [0, 5, 7],      // Sus4
+        [0, 2, 7, 11],  // Maj7sus2
+        [0, 5, 7, 11]   // Maj7sus4
+    ],
+    D: [
+        [0, 3, 7],      // Triad
+        [0, 3, 7, 10],  // Seventh
+    ],
+    E: [
+        [0, 3, 7],      // Triad
+    ],
+    F: [
+        [0, 4, 7],      // Triad
+    ],
+    G: [
+        [0, 4, 7],      // Triad
+    ],
+    A: [
+        [0, 3, 7],      // Triad
+    ],
+    B: [
+        [0, 3, 6],      // Triad
+        [0, 3, 6, 10]   // Seventh
+    ]
+};
+
+var determine_chord = function (pitch, velocity) {
+    var key_played = get_key_played(pitch);
+
+    // Don't play anything if the key isnt in the key selectors
+    if (contains(key_selectors, key_played)) {
+        play_chord(pitch, velocity, chords[key_played][key_selector[key_played]]);
+    }
+};
+
+// Take in a note, velocity, and offsets and play the chord
+var play_chord = function (pitch, velocity, offsets) {
+    for (var i in offsets) {
+        // Get offset
+        offset = offsets[i];
+        // Send a note off trigger
+        outlet(0, [pitch + offset, 0]);
+        // Send a note on trigger
+        outlet(0, [pitch + offset, velocity]);
+    }
+};
+
+var get_key_played = function (pitch) {
+    var all_keys = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    for (var i in all_keys) {
+        if (pitch == i || pitch % 12 == i) {
+            return all_keys[i];
+        }
+    }
+    return -1;
+};
 
 // Accept a note in trigger.
 // Will trigger when a midi note is played
-var notein = function (voice, pitch, velocity) {
-log("notein: [", voice, ' : ', pitch, ' : ', velocity, "]");
-outlet(0, [voice, pitch, velocity]);
-outlet(0, [voice, pitch + 4, velocity]);
-outlet(0, [voice, pitch + 7, velocity]);
+var notein = function (pitch, velocity) {
+    log("notein: [", pitch, ' : ', velocity, "]");
+    determine_chord(pitch, velocity);
 };
 
 // Accept a note mod trigger
 // Will trigger when one of the note knobs is changed
-var notemod = function () {
-log("notemod: ", arguments);
-
+var notemod = function (c, d, e, f, g, a, b) {
+    var selectors = {C: c, D: d, E: e, F: f, G: g, A: a, B: b};
+    log("notemod: ", selectors);
+    key_selectors = selectors;
 };
-
 
 // Don't Need These [Just in case tho]
 
 var msg_int = function (i) {
-log("msg_int: [", inlet, " : ", i, "]");
+    log("msg_int: [", inlet, " : ", i, "]");
 };
 
 var msg_float = function (f) {
-log("msg_float: [", inlet, " : ", f, "]");
+    log("msg_float: [", inlet, " : ", f, "]");
 };
 
 var list = function (l) {
-log("list: [", inlet, " : ", l, "]");
+    log("list: [", inlet, " : ", l, "]");
 };
 
 var bang = function () {
-log("bang");
+    log("bang");
 };
 
 var anything = function (a) {
-log("anything: [", inlet, " : ", a, "]");
+    log("anything: [", inlet, " : ", a, "]");
 };
