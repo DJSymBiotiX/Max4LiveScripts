@@ -84,6 +84,8 @@ var chords = {
     ]
 };
 
+var keys_on = {};
+
 var determine_chord = function (pitch, velocity) {
     var key_played = get_key_played(pitch);
 
@@ -97,22 +99,40 @@ var determine_chord = function (pitch, velocity) {
 var play_chord = function (pitch, velocity, offsets) {
     for (var i in offsets) {
         // Get offset
-        offset = offsets[i];
-        // Send a note off trigger
-        outlet(0, [pitch + offset, 0]);
-        // Send a note on trigger
-        outlet(0, [pitch + offset, velocity]);
+        var offset = offsets[i];
+
+        // Get the key name and octave of the key we want to play
+        var key_value = get_key_played(pitch + offset);
+        var octave = get_octave_played(pitch + offset);
+        var key = key_value + "" + octave;
+
+        // If the key we want to play is getting a "note off" message
+        // or the key we want to play is currently already "on"
+        // turn it off
+        if (velocity == 0 || contains(key_on, key)) {
+            // Send a note off trigger specifically
+            outlet(0, [pitch + offset, 0]);
+            delete key_on[key];
+        } else {
+            // Send a note on trigger
+            outlet(0, [pitch + offset, velocity]);
+            key_on[key] = true;
+        }
     }
 };
 
 var get_key_played = function (pitch) {
     var all_keys = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
     for (var i in all_keys) {
-        if (pitch == i || pitch % 12 == i) {
+        if (pitch % 12 == i) {
             return all_keys[i];
         }
     }
     return -1;
+};
+
+var get_octave_played = function (pitch) {
+    return pitch / 12;
 };
 
 // Accept a note in trigger.
