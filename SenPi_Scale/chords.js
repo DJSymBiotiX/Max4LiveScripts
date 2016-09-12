@@ -1,41 +1,49 @@
-var log_mode {
+var log_mode = {
 	info: 1,
 	debug: 2,
 	verbose: 3
 };
-var verbosity = log_mode.verbose;
-var loger = function () {
-	for (var i in arguments) {
-	  msg = arguments[i];
-    if (msg && msg.toString) {
-      var s = msg.toString();
-      if (s.indexOf("[object ") >= 0) {
-        s = JSON.stringify(msg);
-      }
-      post(s);
-    } else if (msg === null) {
-      post("<null>");
-    } else {
-      post(msg);
-    }
+var verbosity = log_mode.info;
+var loger = function (msg) {
+	if (msg && msg.toString) {
+		var s = msg.toString();
+		if (s.indexOf("[object ") >= 0) {
+			s = JSON.stringify(msg);
+		}
+		post(s);
+	} else if (msg === null) {
+		post("<null>");
+	} else {
+		post(msg);
 	}
-	post("\n");
 };
 
 var log = {
 	info: function () {
-		if (verbodity > 0) {
-			loger("   [INFO] ", arguments);
+		if (verbosity >= log_mode.info) {
+			loger("[I] ");
+			for (var i in arguments) {
+				loger(arguments[i]);
+			}
+			post('\n');
 		}
 	},
 	debug: function () {
-		if (verbosity > 1) {
-			loger("  [DEBUG] ", arguments);
+		if (verbosity >= log_mode.debug) {
+			loger("[D] ");
+			for (var i in arguments) {
+				loger(arguments[i]);
+			}
+			post('\n');
 		}
 	},
 	verbose: function () {
-		if (verbosity > 2) {
-			loger("[VERBOSE] ", arguments);
+		if (verbosity >= log_mode.verbose) {
+			loger("[V] ");
+			for (var i in arguments) {
+				loger(arguments[i]);
+			}
+			post('\n');
 		}
 	}
 };
@@ -47,7 +55,8 @@ log.info("Reload: ", new Date);
 // Input
 // notein list/function
 // notemod list/function
-inlets = 2;
+// log level
+inlets = 3;
 
 // Output
 // list pitch, velocity
@@ -226,6 +235,11 @@ var notemod = function (c, d, e, f, g, a, b) {
 	clean_up_keys();
 
 	log.debug("notemod ", selectors);
+};
+
+var loglevel = function (log_level) {
+	verbosity = log_level;
+	log.debug("loglevel ", log_level);
 };
 
 /* Return the key letter
